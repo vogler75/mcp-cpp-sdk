@@ -41,6 +41,7 @@
 #include "mcp/transport/child_process_transport.hpp"
 #endif
 #include "mcp/transport/async_rw_transport.hpp"
+#include "mcp/transport/worker_transport.hpp"
 
 // Handler layer
 #include "mcp/handler/server_handler.hpp"
@@ -60,6 +61,7 @@
 #ifdef MCP_HTTP_TRANSPORT
 #include "mcp/transport/streamable_http_client.hpp"
 #include "mcp/transport/streamable_http_server.hpp"
+#include "mcp/transport/websocket_transport.hpp"
 #endif
 
 // Auth (OAuth 2.1)

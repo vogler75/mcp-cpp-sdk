@@ -15,3 +15,7 @@ add_test(NAME test_tool_router COMMAND test_tool_router)
 add_executable(test_service_loop test_service_loop.cpp)
 target_link_libraries(test_service_loop PRIVATE mcp GTest::gtest_main)
 add_test(NAME test_service_loop COMMAND test_service_loop)
+
+add_executable(test_transports test_transports.cpp)
+target_link_libraries(test_transports PRIVATE mcp GTest::gtest_main)
+add_test(NAME test_transports COMMAND test_transports)

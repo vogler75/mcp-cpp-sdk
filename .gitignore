@@ -24,6 +24,9 @@ _deps/
 *.exe
 *.out
 
+# Caches
+.cache/
+
 # macOS
 .DS_Store
 

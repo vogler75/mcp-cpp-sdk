@@ -10,7 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(MCP_BUILD_TESTS "Build tests" ON)
 option(MCP_BUILD_EXAMPLES "Build examples" ON)
 option(MCP_BUILD_HTTP_TRANSPORT "Build HTTP transport (requires Boost.Beast)" ON)
-option(MCP_BUILD_CHILD_PROCESS "Build child process transport (requires Boost.Process)" OFF)
+option(MCP_BUILD_CHILD_PROCESS "Build child process transport (POSIX fork/pipe)" OFF)
 
 # Fetch dependencies
 include(cmake/FetchDependencies.cmake)
@@ -40,7 +40,6 @@ set(MCP_MODEL_SOURCES
 
 set(MCP_TRANSPORT_SOURCES
     src/transport/stdio_transport.cpp
-    src/transport/async_rw_transport.cpp
 )
 
 if(MCP_BUILD_CHILD_PROCESS)
@@ -82,6 +81,7 @@ if(MCP_BUILD_HTTP_TRANSPORT)
     list(APPEND MCP_ALL_SOURCES
         src/transport/streamable_http_client.cpp
         src/transport/streamable_http_server.cpp
+        src/transport/websocket_transport.cpp
     )
 endif()
 
@@ -108,9 +108,6 @@ endif()
 
 if(MCP_BUILD_CHILD_PROCESS)
     target_compile_definitions(mcp PUBLIC MCP_CHILD_PROCESS_TRANSPORT=1)
-    # Boost.Process v2 requires linking against compiled Boost libraries
-    find_package(Boost 1.82 REQUIRED COMPONENTS filesystem)
-    target_link_libraries(mcp PUBLIC Boost::filesystem)
 endif()
 
 # Tests
