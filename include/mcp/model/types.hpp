@@ -3,8 +3,10 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -19,12 +21,15 @@ using JsonObject = nlohmann::json::object_t;
 
 class ProtocolVersion {
 public:
+    static const ProtocolVersion V_2025_11_25;
     static const ProtocolVersion V_2025_06_18;
     static const ProtocolVersion V_2025_03_26;
     static const ProtocolVersion V_2024_11_05;
     static const ProtocolVersion LATEST;
 
-    ProtocolVersion() : value_("2025-03-26") {}
+    static const std::vector<ProtocolVersion>& known_versions();
+
+    ProtocolVersion() : value_("2025-11-25") {}
     explicit ProtocolVersion(std::string value) : value_(std::move(value)) {}
 
     const std::string& value() const { return value_; }
@@ -262,24 +267,46 @@ struct CustomResult {
 // Implementation (server/client info)
 // =============================================================================
 
+enum class IconTheme {
+    Light,
+    Dark,
+};
+
+inline void to_json(json& j, const IconTheme& t) {
+    switch (t) {
+        case IconTheme::Light: j = "light"; break;
+        case IconTheme::Dark:  j = "dark";  break;
+    }
+}
+inline void from_json(const json& j, IconTheme& t) {
+    const auto s = j.get<std::string>();
+    if (s == "light") t = IconTheme::Light;
+    else if (s == "dark") t = IconTheme::Dark;
+    else throw std::runtime_error("unknown IconTheme: " + s);
+}
+
 struct Icon {
     std::string src;
     std::optional<std::string> mime_type;
     std::optional<std::vector<std::string>> sizes;
+    std::optional<IconTheme> theme;
 
     bool operator==(const Icon& other) const {
-        return src == other.src && mime_type == other.mime_type && sizes == other.sizes;
+        return src == other.src && mime_type == other.mime_type
+            && sizes == other.sizes && theme == other.theme;
     }
 
     friend void to_json(json& j, const Icon& i) {
         j = json{{"src", i.src}};
         if (i.mime_type) j["mimeType"] = *i.mime_type;
         if (i.sizes) j["sizes"] = *i.sizes;
+        if (i.theme) j["theme"] = *i.theme;
     }
     friend void from_json(const json& j, Icon& i) {
         j.at("src").get_to(i.src);
         detail::get_opt(j, "mimeType", i.mime_type);
         detail::get_opt(j, "sizes", i.sizes);
+        detail::get_opt(j, "theme", i.theme);
     }
 };
 

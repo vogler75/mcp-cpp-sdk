@@ -3,10 +3,21 @@
 namespace mcp {
 
 // ProtocolVersion static constants
+const ProtocolVersion ProtocolVersion::V_2025_11_25{std::string("2025-11-25")};
 const ProtocolVersion ProtocolVersion::V_2025_06_18{std::string("2025-06-18")};
 const ProtocolVersion ProtocolVersion::V_2025_03_26{std::string("2025-03-26")};
 const ProtocolVersion ProtocolVersion::V_2024_11_05{std::string("2024-11-05")};
-const ProtocolVersion ProtocolVersion::LATEST{std::string("2025-03-26")};
+const ProtocolVersion ProtocolVersion::LATEST{std::string("2025-11-25")};
+
+const std::vector<ProtocolVersion>& ProtocolVersion::known_versions() {
+    static const std::vector<ProtocolVersion> versions{
+        V_2024_11_05,
+        V_2025_03_26,
+        V_2025_06_18,
+        V_2025_11_25,
+    };
+    return versions;
+}
 
 // ErrorCode static constants
 const ErrorCode ErrorCode::RESOURCE_NOT_FOUND{-32002};

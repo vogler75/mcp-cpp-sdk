@@ -82,6 +82,10 @@ if(MCP_BUILD_HTTP_TRANSPORT)
         src/transport/streamable_http_client.cpp
         src/transport/streamable_http_server.cpp
         src/transport/websocket_transport.cpp
+        src/transport/sse_message.cpp
+        src/transport/oneshot_transport.cpp
+        src/transport/local_session_manager.cpp
+        src/transport/never_session_manager.cpp
     )
 endif()
 

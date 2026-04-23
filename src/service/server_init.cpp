@@ -53,33 +53,14 @@ asio::awaitable<RunningService<RoleServer>> serve_server(
     co_await transport_ptr->send(TxMsg::response(ServerResult(result), init_id));
     spdlog::info("Server: sent initialize result");
 
-    // -------------------------------------------------------------------------
-    // Step 4: Wait for the client's InitializedNotification
-    // -------------------------------------------------------------------------
-    spdlog::info("Server: waiting for initialized notification...");
-
-    auto notif_msg = co_await transport_ptr->receive();
-    if (!notif_msg) {
-        throw McpError(ErrorData::internal_error(
-            "Transport closed before receiving InitializedNotification"));
-    }
-
-    if (notif_msg->is_notification()) {
-        auto notif = notif_msg->into_notification();
-        if (notif && notif->is<InitializedNotification>()) {
-            spdlog::info("Server: received initialized notification");
-        } else {
-            spdlog::warn(
-                "Server: expected InitializedNotification but received '{}'",
-                notif ? notif->method() : "<unknown>");
-        }
-    } else {
-        spdlog::warn(
-            "Server: expected notification but received a different message type");
-    }
+    // Enter the main receive loop immediately after sending InitializeResult.
+    // The client's `notifications/initialized` message is handled as a regular
+    // notification by the loop below. Streamable HTTP transports have no
+    // ordering guarantee between POSTs, so a `tools/list` can arrive before
+    // `initialized` — gating here would drop it.
 
     // -------------------------------------------------------------------------
-    // Step 5: Create Peer<RoleServer> with a send callback through the transport
+    // Step 4: Create Peer<RoleServer> with a send callback through the transport
     // -------------------------------------------------------------------------
     auto peer = std::make_shared<Peer<RoleServer>>(
         [transport_ptr](TxMsg msg) -> asio::awaitable<void> {
@@ -88,14 +69,17 @@ asio::awaitable<RunningService<RoleServer>> serve_server(
     peer->set_peer_info(client_params);
 
     // -------------------------------------------------------------------------
-    // Step 6: Call handler->on_initialized()
+    // Step 5: Call handler->on_initialized()
     // -------------------------------------------------------------------------
+    // Fires once the server has finished its side of initialization, regardless
+    // of whether the client's `initialized` notification has yet arrived (which
+    // it may not, over Streamable HTTP, until some time later).
     ServerRequestContext init_ctx{peer, RequestId(int64_t{0}), cancellation.child(), {}};
     co_await handler->on_initialized(client_params, std::move(init_ctx));
     spdlog::info("Server: initialization complete");
 
     // -------------------------------------------------------------------------
-    // Step 7: Create completion timer and RunningService
+    // Step 6: Create completion timer and RunningService
     // -------------------------------------------------------------------------
     auto executor = co_await asio::this_coro::executor;
     auto completion_timer = std::make_shared<asio::steady_timer>(executor);
@@ -105,7 +89,7 @@ asio::awaitable<RunningService<RoleServer>> serve_server(
     service.set_completion(completion_timer);
 
     // -------------------------------------------------------------------------
-    // Step 8: Start the main receive loop in a background coroutine
+    // Step 7: Start the main receive loop in a background coroutine
     // -------------------------------------------------------------------------
     auto handler_copy = handler;
     auto peer_copy = peer;

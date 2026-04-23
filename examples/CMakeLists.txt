@@ -24,4 +24,8 @@ if(MCP_BUILD_HTTP_TRANSPORT)
 
     add_executable(http_upgrade_transport http_upgrade_transport.cpp)
     target_link_libraries(http_upgrade_transport PRIVATE mcp)
+
+    # Comprehensive HTTP test server with auth, tools, prompts, resources
+    add_executable(http_test_server http_test_server.cpp)
+    target_link_libraries(http_test_server PRIVATE mcp)
 endif()

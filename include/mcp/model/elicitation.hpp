@@ -180,9 +180,10 @@ struct CreateElicitationRequestParams {
 struct CreateElicitationResult {
     ElicitationAction action;
     std::optional<json> content;
+    std::optional<Meta> meta;
 
     bool operator==(const CreateElicitationResult& other) const {
-        return action == other.action && content == other.content;
+        return action == other.action && content == other.content && meta == other.meta;
     }
 
     friend void to_json(json& j, const CreateElicitationResult& r) {
@@ -190,12 +191,18 @@ struct CreateElicitationResult {
         if (r.content.has_value()) {
             j["content"] = *r.content;
         }
+        if (r.meta.has_value()) {
+            j["_meta"] = *r.meta;
+        }
     }
 
     friend void from_json(const json& j, CreateElicitationResult& r) {
         j.at("action").get_to(r.action);
         if (j.contains("content") && !j["content"].is_null()) {
             r.content = j["content"];
+        }
+        if (j.contains("_meta") && !j["_meta"].is_null()) {
+            r.meta = j["_meta"].get<Meta>();
         }
     }
 };

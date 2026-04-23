@@ -111,9 +111,9 @@ asio::awaitable<void> ServerHandler::handle_notification(
         spdlog::trace("ServerHandler: dispatching ProgressNotification");
         co_await on_progress(notification.get<ProgressNotification>().params);
     } else if (notification.is<InitializedNotification>()) {
-        // InitializedNotification is handled during the initialization handshake.
-        spdlog::trace(
-            "ServerHandler: ignoring InitializedNotification (handled during init)");
+        // on_initialized already fired after InitializeResult was sent; the
+        // client's notifications/initialized is acknowledged here.
+        spdlog::trace("ServerHandler: received InitializedNotification");
     } else if (notification.is<RootsListChangedNotification>()) {
         spdlog::trace("ServerHandler: dispatching RootsListChangedNotification");
         co_await on_roots_list_changed();
